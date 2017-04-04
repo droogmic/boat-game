@@ -21,7 +21,7 @@ class App extends Component {
                 if (i === 0) {
                     return {i: 's'+i.toString()+'-N/A', x: i, y: 0, w: 1, h: 1, static: true};
                 } else {
-                    let prefix = getHashName('M');
+                    let prefix = getHashName('Crew ');
                     return {
                         i: 's'+i.toString()+'-'+prefix+i.toString(),
                         x: i, y: 0,
@@ -35,8 +35,6 @@ class App extends Component {
             cols: 9,
         };
     }
-
-
 
     handleLayoutChange(layout) {
         this.setState({items: layout.slice(9)});
@@ -103,6 +101,7 @@ class App extends Component {
 
     handleClear() {
         this.setState({items: []});
+        window.location.hash = "";
     }
 
     render() {
@@ -176,16 +175,19 @@ function parse_with_inf(json) {
 }
 
 function getHashState() {
+    let stripped = window.location.hash.replace('#/', '');
     return decodeURIComponent(
-        window.location.hash.split('/')[1] ||
-        window.location.hash.split('/')[0].substr(1)
+        (stripped[0] === '#') ?
+        stripped.split('/')[0].substr(1) :
+        stripped.split('/')[1].substr(1) || ''
     );
 }
 
 function getHashName(val='') {
+        let stripped = window.location.hash.replace('#/', '');
     return decodeURIComponent(
-        (window.location.hash.split('/').length === 2) ?
-        window.location.hash.split('/')[0].substr(1) :
+        (stripped[0] !== '#') ?
+        stripped.split('/')[0] || val :
         val
     );
 }
@@ -193,20 +195,26 @@ function getHashName(val='') {
 function getFromHash() {
     if (!!window.location.hash) {
         let hash = getHashState();
-        let json = window.atob(hash);
-        let items = parse_with_inf(json);
-        return items;
+        if (hash !== "") {
+            let json = window.atob(hash);
+            let items = parse_with_inf(json);
+            return items;
+        }
     }
     return null;
 }
 
 function setToHash(items) {
     if (items.length === 0) {
-        window.location.hash = getHashName();
+        if (!!window.location.hash) {
+            window.location.hash = '/'+ encodeURIComponent(getHashName()) + '/';
+        }
     } else {
         let json = stringify_with_inf(items);
         let hash = window.btoa(json);
-        window.location.hash = encodeURIComponent(getHashName()) + '/' + hash;
+        window.location.hash = (
+            '/'+ encodeURIComponent(getHashName()) + '/#' + hash
+        );
     }
 }
 

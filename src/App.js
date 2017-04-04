@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+    import React, { Component } from 'react';
 import './App.css';
 // import {Responsive, WidthProvider} from 'react-grid-layout';
 import ReactGridLayout from 'react-grid-layout';
@@ -7,24 +7,33 @@ class App extends Component {
 
     constructor(props) {
         super(props);
+        this.getInitialState = this.getInitialState.bind(this);
         this.createElement = this.createElement.bind(this);
-        this.onAddItem = this.onAddItem.bind(this);
-        this.onRemoveItem = this.onRemoveItem.bind(this);
+        this.handleAddItem = this.handleAddItem.bind(this);
+        this.handleRemoveItem = this.handleRemoveItem.bind(this);
+        this.handleClear = this.handleClear.bind(this);
         this.state = this.getInitialState();
     }
 
     getInitialState() {
         return {
-            items: [0, 1, 2, 3, 4, 5, 6, 7, 8].map(function(i) {
+            static_items: [0, 1, 2, 3, 4, 5, 6, 7, 8].map(function(i) {
                 if (i === 0) {
                     return {i: 's'+i.toString()+'-N/A', x: i, y: 0, w: 1, h: 1, static: true};
                 } else {
                     return {i: 's'+i.toString()+'-M'+i.toString(), x: i, y: 0, w: 1, h: 1, static: true};
                 }
             }),
+            items: getFromHash() || getFromLS() || [],
             newCounter: 0,
             cols: 9,
         };
+    }
+
+    handleLayoutChange(layout) {
+        this.setState({items: layout.slice(9)});
+        setToHash(this.state.items);
+        saveToLS(this.state.items);
     }
 
     createElement(el) {
@@ -36,21 +45,20 @@ class App extends Component {
         };
         var i = el.i;
         return (
-            <div key={i} data-grid={el}>
+            <div key={i}>
                 <span className="text">{i.split('-')[1]}</span>
                 {
                     (el.static === true) ?
                     (null) :
-                    (<span className="remove" style={removeStyle} onClick={this.onRemoveItem.bind(this, i)}>x</span>)
+                    (<span className="remove" style={removeStyle} onClick={ this.handleRemoveItem.bind(this, i) }>x</span>)
                 }
             </div>
         );
     }
 
-    onAddItem(val="") {
-        // console.log('adding', 'n' + this.state.newCounter);
+    handleAddItem(val="") {
         this.setState({
-            // Add a new item. It must have a unique key!
+            // add a new item
             items: this.state.items.concat({
                 i: 'n' + this.state.newCounter + '-' + val,
                 x: 0,
@@ -58,55 +66,124 @@ class App extends Component {
                 w: 1,
                 h: 1
             }),
-            // Increment the counter to ensure key is always unique.
+            // ncrement the counter for unique key i
             newCounter: this.state.newCounter + 1
         });
     }
 
-    onRemoveItem(i) {
-        // console.log('removing', i);
+    handleRemoveItem(i) {
         this.setState({items: Array.prototype.filter.call(this.state.items, item => item.i!==i)});
     }
 
+    handleClear() {
+        this.setState({items: []});
+    }
+
     render() {
-        let layout = this.state.items;
+        let layout = this.state.items.concat(this.state.static_items);
         return (
             <div className="App">
-                <NameInput onClick={this.onAddItem}/>
+                <Input onAdd={ this.handleAddItem } onClear={ this.handleClear }/>
                 <ReactGridLayout
                 cols={this.state.cols}
                 rowHeight={40}
                 width={1600}
-                layout={layout}>
-                    {this.state.items.map(this.createElement)}
+                layout={layout}
+                onLayoutChange={ this.handleLayoutChange.bind(this) }>
+                    { this.state.static_items.map(this.createElement) }
+                    { this.state.items.map(this.createElement) }
                 </ReactGridLayout>
             </div>
         );
     }
 }
 
-class NameInput extends React.Component {
+class Input extends React.Component {
     _handleKeyPress = (e) => {
         if (e.key === 'Enter') {
-            this.props.onClick(e.target.value);
+            this.props.onAdd(e.target.value);
             e.target.value = "";
         }
     }
     _handleButtonPress = () => {
-        this.props.onClick(this.refs.name.value);
+        this.props.onAdd(this.refs.name.value);
         this.refs.name.value = "";
     }
     render() {
         return (
             <div>
                 <input ref='name' type="text" onKeyPress={this._handleKeyPress}/>
-                <button onClick={this._handleButtonPress}>Add Person (Enter)</button>
+                <button onClick={ this._handleButtonPress }>Add Person (Enter)</button>
+                <button onClick={ this.props.onClear }>Clear</button>
             </div>
         )
     }
 }
-NameInput.propTypes = {
-    onClick: React.PropTypes.func.isRequired,
+Input.propTypes = {
+    onAdd: React.PropTypes.func.isRequired,
+    onClear: React.PropTypes.func.isRequired,
 };
+
+function stringify_with_inf(items) {
+    return JSON.stringify(items.map(
+        function(item) {
+            return Object.assign(item, (
+                (item.y===Infinity) ? {y:"$inf"} : {}
+            ));
+        }
+    ));
+}
+
+function parse_with_inf(json) {
+    let items = JSON.parse(json);
+    if (!!items.length) {
+        return items.map(
+            function(item) {
+                return Object.assign(item  , (
+                    (item.y==="$inf") ? {y:Infinity} : {}
+                ));
+            }
+        )
+    } else {
+        return null;
+    }
+}
+
+function getFromHash() {
+    if (!!window.location.hash) {
+        let hash = window.location.hash.substr(1);
+        let json = window.atob(hash);
+        let items = parse_with_inf(json);
+        return items;
+    }
+    return null;
+}
+
+function setToHash(items) {
+    if (items.length === 0) {
+        window.location.hash = "";
+    } else {
+        let json = stringify_with_inf(items);
+        let hash = window.btoa(json);
+        window.location.hash = hash;
+    }
+}
+
+function getFromLS() {
+    let ls = null;
+    if (window.localStorage) {
+        try {
+            ls = parse_with_inf(window.localStorage.getItem('boat-game'));
+        }
+        catch(e) {}
+    }
+    return ls;
+}
+
+function saveToLS(items) {
+    if (window.localStorage) {
+        window.localStorage.setItem('boat-game', stringify_with_inf(items));
+    }
+}
 
 export default App;

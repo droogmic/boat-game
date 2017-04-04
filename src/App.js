@@ -76,7 +76,7 @@ class App extends Component {
                 <ReactGridLayout
                 cols={this.state.cols}
                 rowHeight={40}
-                width={1200}
+                width={1600}
                 layout={layout}>
                     {this.state.items.map(this.createElement)}
                 </ReactGridLayout>

@@ -21,7 +21,17 @@ class App extends Component {
                 if (i === 0) {
                     return {i: 's'+i.toString()+'-N/A', x: i, y: 0, w: 1, h: 1, static: true};
                 } else {
-                    return {i: 's'+i.toString()+'-M'+i.toString(), x: i, y: 0, w: 1, h: 1, static: true};
+                    // replace for github page
+                    let prefix = window.location.pathname
+                        .replace('/boat-game', '')
+                        .split('/')[1]
+                        || 'M';
+                    return {
+                        i: 's'+i.toString()+'-'+prefix+i.toString(),
+                        x: i, y: 0,
+                        w: 1, h: 1,
+                        static: true
+                    };
                 }
             }),
             items: (getFromHash() || getFromLS() || []).map(this.fillLayout),
@@ -29,6 +39,8 @@ class App extends Component {
             cols: 9,
         };
     }
+
+
 
     handleLayoutChange(layout) {
         this.setState({items: layout.slice(9)});

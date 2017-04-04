@@ -89,12 +89,13 @@ class NameInput extends React.Component {
     _handleKeyPress = (e) => {
         if (e.key === 'Enter') {
             this.props.onClick(e.target.value);
+            e.target.value = "";
         }
     }
     render() {
         return (
             <div>
-                <input type="text" onKeyPress={this._handleKeyPress} />
+                <input type="text" onKeyPress={this._handleKeyPress}/>
                 <button onClick={this.onAddItem}>Add Item</button>
             </div>
         )

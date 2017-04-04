@@ -21,7 +21,7 @@ class App extends Component {
                 if (i === 0) {
                     return {i: 's'+i.toString()+'-N/A', x: i, y: 0, w: 1, h: 1, static: true};
                 } else {
-                    let prefix = getHash2('M');
+                    let prefix = getHashName('M');
                     return {
                         i: 's'+i.toString()+'-'+prefix+i.toString(),
                         x: i, y: 0,
@@ -175,15 +175,15 @@ function parse_with_inf(json) {
     }
 }
 
-function getHash1() {
-    return (
+function getHashState() {
+    return decodeURIComponent(
         window.location.hash.split('/')[1] ||
         window.location.hash.split('/')[0].substr(1)
     );
 }
 
-function getHash2(val='') {
-    return (
+function getHashName(val='') {
+    return decodeURIComponent(
         (window.location.hash.split('/').length === 2) ?
         window.location.hash.split('/')[0].substr(1) :
         val
@@ -192,7 +192,7 @@ function getHash2(val='') {
 
 function getFromHash() {
     if (!!window.location.hash) {
-        let hash = getHash1();
+        let hash = getHashState();
         let json = window.atob(hash);
         let items = parse_with_inf(json);
         return items;
@@ -202,11 +202,11 @@ function getFromHash() {
 
 function setToHash(items) {
     if (items.length === 0) {
-        window.location.hash = getHash2();
+        window.location.hash = getHashName();
     } else {
         let json = stringify_with_inf(items);
         let hash = window.btoa(json);
-        window.location.hash = getHash2() + '/' + hash;
+        window.location.hash = encodeURIComponent(getHashName()) + '/' + hash;
     }
 }
 

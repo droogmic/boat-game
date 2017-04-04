@@ -21,11 +21,7 @@ class App extends Component {
                 if (i === 0) {
                     return {i: 's'+i.toString()+'-N/A', x: i, y: 0, w: 1, h: 1, static: true};
                 } else {
-                    // replace for github page
-                    let prefix = window.location.pathname
-                        .replace('/boat-game', '')
-                        .split('/')[1]
-                        || 'M';
+                    let prefix = getHash2('M');
                     return {
                         i: 's'+i.toString()+'-'+prefix+i.toString(),
                         x: i, y: 0,
@@ -179,9 +175,24 @@ function parse_with_inf(json) {
     }
 }
 
+function getHash1() {
+    return (
+        window.location.hash.split('/')[1] ||
+        window.location.hash.split('/')[0].substr(1)
+    );
+}
+
+function getHash2(val='') {
+    return (
+        (window.location.hash.split('/').length === 2) ?
+        window.location.hash.split('/')[0].substr(1) :
+        val
+    );
+}
+
 function getFromHash() {
     if (!!window.location.hash) {
-        let hash = window.location.hash.substr(1);
+        let hash = getHash1();
         let json = window.atob(hash);
         let items = parse_with_inf(json);
         return items;
@@ -191,11 +202,11 @@ function getFromHash() {
 
 function setToHash(items) {
     if (items.length === 0) {
-        window.location.hash = "";
+        window.location.hash = getHash2();
     } else {
         let json = stringify_with_inf(items);
         let hash = window.btoa(json);
-        window.location.hash = hash;
+        window.location.hash = getHash2() + '/' + hash;
     }
 }
 

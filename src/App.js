@@ -24,7 +24,7 @@ class App extends Component {
                     return {i: 's'+i.toString()+'-M'+i.toString(), x: i, y: 0, w: 1, h: 1, static: true};
                 }
             }),
-            items: getFromHash() || getFromLS() || [],
+            items: (getFromHash() || getFromLS() || []).map(this.fillLayout),
             newCounter: 0,
             cols: 9,
         };
@@ -32,12 +32,29 @@ class App extends Component {
 
     handleLayoutChange(layout) {
         this.setState({items: layout.slice(9)});
-        setToHash(this.state.items);
-        saveToLS(this.state.items);
+        let save_items = this.state.items.map(this.sparseLayout);
+        setToHash(save_items);
+        saveToLS(save_items);
+    }
+
+    fillLayout(item){
+        item.w = 1;
+        item.h = 1;
+        item.isResizable = false;
+        return item;
+    }
+
+    sparseLayout(item){
+        return {
+            i: item.i,
+            x: item.x,
+            y: item.y,
+        }
     }
 
     createElement(el) {
-        var removeStyle = {
+        var removeStyle = (el.static === true) ? {border: '0px'} : {};
+        var removeButtonStyle = {
             position: 'absolute',
             right: '2px',
             top: 0,
@@ -45,12 +62,12 @@ class App extends Component {
         };
         var i = el.i;
         return (
-            <div key={i}>
-                <span className="text">{i.split('-')[1]}</span>
+            <div key={i} style={removeStyle}>
+                <div><span className="text">{i.split('-')[1]}</span></div>
                 {
                     (el.static === true) ?
                     (null) :
-                    (<span className="remove" style={removeStyle} onClick={ this.handleRemoveItem.bind(this, i) }>x</span>)
+                    (<span className="remove" style={removeButtonStyle} onClick={ this.handleRemoveItem.bind(this, i) }>x</span>)
                 }
             </div>
         );
@@ -64,7 +81,8 @@ class App extends Component {
                 x: 0,
                 y: Infinity, // puts it at the bottom
                 w: 1,
-                h: 1
+                h: 1,
+                isResizable: false,
             }),
             // ncrement the counter for unique key i
             newCounter: this.state.newCounter + 1
@@ -80,7 +98,7 @@ class App extends Component {
     }
 
     render() {
-        let layout = this.state.items.concat(this.state.static_items);
+        let layout = this.state.items.map(this.fillLayout).concat(this.state.static_items);
         return (
             <div className="App">
                 <Input onAdd={ this.handleAddItem } onClear={ this.handleClear }/>
@@ -171,7 +189,7 @@ function setToHash(items) {
 
 function getFromLS() {
     let ls = null;
-    if (window.localStorage) {
+    if (window.sessionStorage) {
         try {
             ls = parse_with_inf(window.localStorage.getItem('boat-game'));
         }
@@ -181,8 +199,9 @@ function getFromLS() {
 }
 
 function saveToLS(items) {
-    if (window.localStorage) {
-        window.localStorage.setItem('boat-game', stringify_with_inf(items));
+    if (window.sessionStorage) {
+        window.localStorage.removeItem('boat-game');
+        window.sessionStorage.setItem('boat-game', stringify_with_inf(items));
     }
 }
 

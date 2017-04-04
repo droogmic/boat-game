@@ -18,6 +18,9 @@ body {
     background: #666;
     border: 1px solid white;
 }
+.react-grid-item:not(.react-grid-placeholder) > div {
+    padding: 10px;
+}
 .react-grid-item.cssTransforms {
   transition-property: transform;
 }

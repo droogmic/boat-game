@@ -17,9 +17,9 @@ class App extends Component {
         return {
             items: [0, 1, 2, 3, 4, 5, 6, 7, 8].map(function(i) {
                 if (i === 0) {
-                    return {i: 'S'+i.toString()+'-N/A', x: i, y: 0, w: 1, h: 1, static: true};
+                    return {i: 's'+i.toString()+'-N/A', x: i, y: 0, w: 1, h: 1, static: true};
                 } else {
-                    return {i: 'S'+i.toString()+'-M'+i.toString(), x: i, y: 0, w: 1, h: 1, static: true};
+                    return {i: 's'+i.toString()+'-M'+i.toString(), x: i, y: 0, w: 1, h: 1, static: true};
                 }
             }),
             newCounter: 0,
@@ -92,11 +92,15 @@ class NameInput extends React.Component {
             e.target.value = "";
         }
     }
+    _handleButtonPress = () => {
+        this.props.onClick(this.refs.name.value);
+        this.refs.name.value = "";
+    }
     render() {
         return (
             <div>
-                <input type="text" onKeyPress={this._handleKeyPress}/>
-                <button onClick={this.onAddItem}>Add Item</button>
+                <input ref='name' type="text" onKeyPress={this._handleKeyPress}/>
+                <button onClick={this._handleButtonPress}>Add Person (Enter)</button>
             </div>
         )
     }
